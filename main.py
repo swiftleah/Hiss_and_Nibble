@@ -11,7 +11,7 @@ win.tracer(0)
 head = turtle.Turtle()
 head.speed(0)
 head.shape("square")
-head.color("white")
+head.color("green")
 head.penup()
 head.goto(0, 0)
 head.direction = "stop"
@@ -19,14 +19,15 @@ head.direction = "stop"
 food = turtle.Turtle()
 food.speed(0)
 food.shape("circle")
-food.color("red")
 food.penup()
-food.goto(0, 100)
 
 segments = []
 delay = 0.1
 score = 0
 high_score = 0
+level = 1
+time_limit = 6.0
+starvation_timer = 5.0 
 
 scoreboard = turtle.Turtle()
 scoreboard.speed(0)
@@ -34,8 +35,8 @@ scoreboard.color("white")
 scoreboard.penup()
 scoreboard.hideturtle()
 scoreboard.goto(0, 260)
-scoreboard.write("Score: 0  High Score: 0", align="center",
-                 font=("Courier", 24, "normal"))
+scoreboard.write("Score: 0  High Score: 0  Level: 1", align="center",
+                 font=("Courier", 20, "normal"))
 
 def go_up():
     if head.direction != "down":
@@ -71,7 +72,7 @@ def move():
         head.setx(x + 20)
 
 def check_collision():
-    if head.xcor() > 290 or head.xcor() < -290 or head.ycor() > 290 or head.ycor() < -290:
+    if head.xcor() > 280 or head.xcor() < -280 or head.ycor() > 280 or head.ycor() < -280:
         return True
 
     for segment in segments[1:]:
@@ -92,7 +93,7 @@ def move_segments():
         segments[0].goto(x, y)
 
 def reset_game():
-    global score, delay, high_score
+    global score, delay, high_score, level, time_limit, starvation_timer
     time.sleep(1)
     head.goto(0, 0)
     head.direction = "stop"
@@ -101,9 +102,23 @@ def reset_game():
     segments.clear()
     score = 0
     delay = 0.1
+    level = 1
+    time_limit = max(3.0, time_limit - 0.5) 
+    starvation_timer = 5.0
     scoreboard.clear()
-    scoreboard.write("Score: {}  High Score: {}".format(score, high_score), align="center",
-                     font=("Courier", 24, "normal"))
+    scoreboard.write("Score: {}  High Score: {}  Level: {}".format(score, high_score, level), align="center",
+                     font=("Courier", 20, "normal"))
+
+def spawn_food():
+    global last_food_time
+    while True:
+        x = random.randint(-260, 260)
+        y = random.randint(-260, 260)
+        if (x, y) not in [(segment.xcor(), segment.ycor()) for segment in segments]:
+            food.goto(x, y)
+            food.color(random.choice(["red", "yellow", "white"]))
+            last_food_time = time.time()
+            break
 
 win.listen()
 win.onkeypress(go_up, "w")
@@ -111,21 +126,33 @@ win.onkeypress(go_down, "s")
 win.onkeypress(go_left, "a")
 win.onkeypress(go_right, "d")
 
+last_food_time = time.time()
+last_tail_removal_time = time.time()
+
 while True:
     win.update()
 
     if check_collision():
         reset_game()
+        last_food_time = time.time()
+        last_tail_removal_time = time.time()
+
+    if head.direction != "stop":
+        if time.time() - last_food_time > 6:
+            spawn_food()
+
+            if len(segments) > 0:
+                segments[-1].goto(1000, 1000)
+                segments.pop()
+                last_tail_removal_time = time.time()
 
     if head.distance(food) < 20:
-        x = random.randint(-290, 290)
-        y = random.randint(-290, 290)
-        food.goto(x, y)
+        spawn_food()
 
         new_segment = turtle.Turtle()
         new_segment.speed(0)
         new_segment.shape("square")
-        new_segment.color("grey")
+        new_segment.color("green")
         new_segment.penup()
         segments.append(new_segment)
 
@@ -136,9 +163,29 @@ while True:
         if score > high_score:
             high_score = score
 
+        if score % 100 == 0:
+            level += 1
+            delay *= 0.8
+            time_limit = max(3.0, time_limit - 0.5)
+
         scoreboard.clear()
-        scoreboard.write("Score: {}  High Score: {}".format(score, high_score), align="center",
-                         font=("Courier", 24, "normal"))
+        scoreboard.write("Score: {}  High Score: {}  Level: {}".format(score, high_score, level), align="center",
+                         font=("Courier", 20, "normal"))
+
+        last_food_time = time.time()
+        starvation_timer = 5.0
+
+    if time.time() - last_food_time > time_limit:
+        if time.time() - last_tail_removal_time > time_limit:
+            if len(segments) > 0:
+                segments[-1].goto(1000, 1000)
+                segments.pop()
+                last_tail_removal_time = time.time()
+
+    if len(segments) == 0:
+        starvation_timer -= 0.1
+        if starvation_timer <= 0:
+            reset_game()
 
     move_segments()
 
@@ -147,3 +194,4 @@ while True:
     time.sleep(delay)
 
 win.mainloop()
+
