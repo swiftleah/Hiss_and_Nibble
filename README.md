@@ -8,7 +8,8 @@ segments of its tail will be removed as it is "starving" and it will be game ove
 Highscores are kept track of throughout the game.
 
 Hiss and Nibble deployed page: https://leahrosehenry.wixsite.com/hiss-and-nibble
-Blog article:
+Blog article Robin Henry: https://app.hackernoon.com/mobile/p0TUIECCDeETX8vUvTWv
+Blog article Leah Henry: https://app.hackernoon.com/mobile/75PbSn6Kx5haCRSGiBez
 LinkedIn Robin Henry: https://www.linkedin.com/in/robin-henry-24a560266/
 LinkedIn Leah Henry: https://www.linkedin.com/in/leah-henry-340886262/
 
